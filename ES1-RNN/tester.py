@@ -177,7 +177,7 @@ def validate_model(model, test_set=TEST_SET):
     correct = 0
     for test in test_set:
         expected = test[1]
-        actual = model.predict(test[0])
+        actual = model(test[0])
         if actual == expected:
             correct += 1
 
@@ -186,20 +186,20 @@ def validate_model(model, test_set=TEST_SET):
 def model_results(model, test_set=TEST_SET):
     results = []
     for test in test_set:
-        output = model.predict(test[0])
+        output = model(test[0])
         results.append(tokenizer(test[0], output))
 
     return results
 
 
 class NeverSplitModel:
-    def predict(self, X):
+    def __call__(self, X):
         return [0] * len(X)
 
 
 class CamelRegexSplit:
     REGEX = '[a-z][A-Z]'
-    def predict(self, X):
+    def __call__(self, X):
         results = [0] * len(X)
         for m in re.finditer(CamelRegexSplit.REGEX, X):
             results[m.start()] = 1
