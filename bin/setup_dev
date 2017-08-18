@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# vim: set filetype=sh:
+
+cd "$(dirname $0)"; cd ..
+
+VENV_DIR=.venv
+
+if [ ! -d "$VENV_DIR" ]; then
+    if ! which brew; then
+        echo "Need to install swig and ffmepg packages, default to using brew but brew not found"
+        exit 1
+    fi
+
+    brew install swig
+    brew install ffmpeg
+
+    python3 -m venv --copies --prompt deep $VENV_DIR
+    ln -s $PWD/$VENV_DIR/bin/activate $PWD/activate
+fi
+
+if [ -f deactivate ]; then
+    deactivate
+fi
+
+source activate
+pip install -r requirements.txt
