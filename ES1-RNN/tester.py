@@ -23,7 +23,7 @@ def tag_counts(debug=False):
     return tag_counts
 
 
-def init_test_set(count=60, debug=False):
+def init_test_set(count=100, debug=False):
     initial_set = [[t[0], '0'*len(t[0])] for t in tag_counts().most_common()]
     if debug:
         for i, s in enumerate(initial_set[:count]):
@@ -153,7 +153,86 @@ def apply_labels_to_test_set():
     s[58][1]="000"
     #         MzansiFolloTrain
     s[59][1]="0000010000100000"
-
+    #         …
+    s[60][1]="0"
+    #         PL25
+    s[61][1]="0100"
+    #         cbb
+    s[62][1]="000"
+    #         boonkgang
+    s[63][1]="000010000"
+    #         Football
+    s[64][1]="00000000"
+    #         강다니엘
+    s[65][1]="0000"
+    #         eclipse
+    s[66][1]="0000000"
+    #         Trump's
+    s[67][1]="0000100"
+    #         np
+    s[68][1]="00"
+    #         Shadowhunters
+    s[69][1]="0000000000000"
+    #         Sophiamusik
+    s[70][1]="00000100000"
+    #         eclipse17
+    s[71][1]="000000100"
+    #         LaLunaSangreInformant
+    s[72][1]="010001000001000000000"
+    #         AGT
+    s[73][1]="000"
+    #         지훈
+    s[74][1]="00"
+    #         porn
+    s[75][1]="0000"
+    #         GOT7
+    s[76][1]="0010"
+    #         love
+    s[77][1]="0000"
+    #         DolansTwinsNewVideo
+    s[78][1]="0000010000100100000"
+    #         MONSTA_X
+    s[79][1]="00000110"
+    #         WIN
+    s[80][1]="000"
+    #         Overwatch
+    s[81][1]="000000000"
+    #         BeingMaryJane
+    s[82][1]="0000100010000"
+    #         FifthHarmony
+    s[83][1]="000010000000"
+    #         nationalrelaxationday
+    s[84][1]="000000010000000001000"
+    #         SoundCloud
+    s[85][1]="0000100000"
+    #         WeRiseTour
+    s[86][1]="0100010000"
+    #         cosplaytutorial
+    s[87][1]="000000100000000"
+    #         win
+    s[88][1]="000"
+    #         TeamFollowBack
+    s[89][1]="00010000010000"
+    #         Repost
+    s[90][1]="000000"
+    #         F4F
+    s[91][1]="000"
+    #         music
+    s[92][1]="00000"
+    #         twitch
+    s[93][1]="000000"
+    #         KCAMexico
+    s[94][1]="001000000"
+    #         FakeNews
+    s[95][1]="00010000"
+    #         sex
+    s[96][1]="000"
+    #         HeatherHeyer.
+    s[97][1]="0000001000000"
+    #         VMAs
+    s[98][1]="0000"
+    #         giveaway
+    s[99][1]="00000000"
     updated_set = s
     return [[s[0], [int(c) for c in s[1]]] for s in updated_set]
 

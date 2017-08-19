@@ -12,10 +12,11 @@ from tester import TEST_SET, validate_model, model_results
 
 class RNNModel:
     ONE_HOT_SIZE = 64
-    LAYER_SIZE=256
-    LEARNING_RATE=1e-4
+    LAYER_SIZE=128
+    LEARNING_RATE=1e-3
     BATCH_SIZE=64
     EPOCHS=5
+    CUTOFF=.5
 
     def __init__(self):
         self._test_data = None
@@ -57,8 +58,9 @@ class RNNModel:
             #
             self._forward_lstm = rnn.BasicLSTMCell(input_n)
             self._backward_lstm = rnn.BasicLSTMCell(input_n)
-            self._rnn_output, self._rnn_states = nn.bidirectional_dynamic_rnn(self._forward_lstm, self._backward_lstm, self._text,
+            bidir_output, self._rnn_states = nn.bidirectional_dynamic_rnn(self._forward_lstm, self._backward_lstm, self._text,
                 dtype=tf.float32, sequence_length=self._q_len)
+            self._rnn_output = tf.concat(bidir_output, axis=2)
             hidden_n = input_n * 2
 
             #
@@ -110,9 +112,12 @@ class RNNModel:
 
 
             # train_opt = train.GradientDescentOptimizer(1e-1)
-            # train_opt = train.AdamOptimizer(learning_rate=1e-3)
             train_opt = train.AdamOptimizer(learning_rate=learning_rate)
-            self._train_step = train_opt.minimize(self._loss)
+            # self._train_step = train_opt.minimize(self._loss)
+
+            gradients, variables = zip(*train_opt.compute_gradients(self._loss))
+            gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
+            self._train_step = train_opt.apply_gradients(zip(gradients, variables))
 
             # self._prediction = tf.matmul(self._wx, self._bias)
 
@@ -127,13 +132,10 @@ class RNNModel:
         print('Logits: ', sess.run(self._logits, feed_dict=feed_dict))
         print('Predictions: ', sess.run(self._prediction, feed_dict=feed_dict))
         print('Losses: ', sess.run(self._loss, feed_dict=feed_dict))
-        # print(sess.run(self._target, feed_dict=feed_dict))
-        # print(sess.run(self._target, feed_dict=feed_dict))
-        # print(sess.run(self._target, feed_dict=feed_dict))
-        # print(sess.run(self._target, feed_dict=feed_dict))
+        print('Training: ', sess.run(self._train_step, feed_dict=feed_dict))
 
     # def train(self, epochs=EPOCHS, batch_size=BATCH_SIZE):
-    def train(self, epochs=1, batch_size=1):
+    def train(self, epochs=1, batch_size=64):
         self.build()
 
         sess = tf.Session(graph=self._graph)
@@ -149,10 +151,11 @@ class RNNModel:
             start = 0
             end = batch_size
             for batch in range(batch_count):
-                # pprint(test_set[start:end])
-
-                max_sequence = max([len(b['phrase']) for b in test_set[start:end]])
                 input_set = test_set[start:end]
+                # input_set = [{'normal': [0, 0, 1, 0, 0, 0], 'phrase': 'TheMan'}]
+
+                # pprint(test_set[start:end])
+                max_sequence = max([len(b['phrase']) for b in input_set])
                 feed_dict = {
                     self._text: [self._one_hot_encode(x['phrase'], max_length=max_sequence) for x in input_set],
                     self._target: [self._pad_word(x['normal'], max_length=max_sequence) for x in input_set],
@@ -167,8 +170,8 @@ class RNNModel:
 
                 # output = sess.run(self._prediction, feed_dict=feed_dict)
                 # print(output.shape)
-                self._debug(sess, feed_dict, input_set)
-                break
+                # self._debug(sess, feed_dict, input_set)
+                # break
 
                 results = sess.run([self._train_step, self._loss, self._prediction], feed_dict=feed_dict)
                 if batch % 10 == 0:
@@ -179,16 +182,23 @@ class RNNModel:
                 end = end + batch_size
 
                 if batch % 10 == 0:
-                    def test_model(word):
-                        feed_dict = {
-                            self._text: [self._one_hot_encode(word)],
-                            self._q_len: [len(word)]
-                        }
+                    self._validate(sess)
 
-                        value = sess.run(self._prediction, feed_dict=feed_dict)
-                        return  [int(np.round(v)) for v in value[0]]
+        self._validate(sess)
 
-                    print(f'Model results: {validate_model(test_model)}')
+    def _validate(self, sess):
+        def test_model(word):
+            feed_dict = {
+                self._text: [self._one_hot_encode(word)],
+                self._q_len: [len(word)]
+            }
+
+            value = sess.run(self._prediction, feed_dict=feed_dict)
+            return [int(np.round(v)) for v in value[0]]
+
+        print(f'Model results: {validate_model(test_model)}')
+
+
 
     def _pad_word(self, word, max_length=None):
         update = list(word)
@@ -198,7 +208,7 @@ class RNNModel:
 
     def _test_set(self):
         if not self._test_data:
-            self._load_test_data(limit=1000)
+            self._load_test_data()
 
         np.random.shuffle(self._test_data)
         return self._test_data
